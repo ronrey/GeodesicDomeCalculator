@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Geodesic Strut Calculator</title>
+    <style>
+      :root {
+        --bg: #0b0e14;
+        --card: #121826;
+        --muted: #9aa4b2;
+        --text: #e5e7eb;
+        --border: #22304a;
+        --primary: #4f46e5;
+        --chip: #1e293b;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+      }
+      .container {
+        max-width: 1200px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0 0 8px;
+      }
+      p.muted {
+        color: var(--muted);
+        margin: 4px 0 0;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(12, 1fr);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .card.pad-lg {
+        padding: 20px;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .grow {
+        margin-left: auto;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .field input,
+      .field select {
+        background: #0e1525;
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 12px;
+        outline: none;
+      }
+      .btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 8px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn:hover {
+        border-color: #3b4b6b;
+      }
+      .btn.primary {
+        border-color: var(--primary);
+        color: #fff;
+        background: linear-gradient(180deg, #5b57f3, #4338ca);
+      }
+      .status {
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 8px 6px;
+        text-align: left;
+        font-size: 14px;
+      }
+      code {
+        background: #0f172a;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+      .chip {
+        background: var(--chip);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+      .legend {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        align-items: center;
+      }
+      .legend .sw {
+        width: 16px;
+        height: 4px;
+        border-radius: 2px;
+      }
+      .canvas-wrap {
+        height: 420px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #0b1220;
+        border: 1px solid var(--border);
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        cursor: grab;
+        touch-action: none;
+      }
+      .col-12 {
+        grid-column: span 12;
+      }
+      .col-6 {
+        grid-column: span 12;
+      }
+      @media (min-width: 900px) {
+        .col-6 {
+          grid-column: span 6;
+        }
+      }
+      dialog::backdrop {
+        background: rgba(7, 10, 18, 0.7);
+      }
+      dialog {
+        width: min(1200px, 96vw);
+        height: min(90vh, 900px);
+        border: none;
+        border-radius: 16px;
+        padding: 0;
+        background: var(--bg);
+      }
+      .dialog-head {
+        background: #11172a;
+        border-bottom: 1px solid var(--border);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .dialog-body {
+        padding: 16px;
+        height: calc(100% - 54px);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card pad-lg">
+        <h1>Geodesic Strut Calculator</h1>
+        <p class="muted">
+          Size outer and inner struts for wood panels that butt along beveled
+          edges. Enter an outer diameter, panel thickness, and frequency to see
+          matching strut lengths and bevels.
+        </p>
+
+        <div class="grid" style="margin-top: 12px">
+          <div class="col-6">
+            <div class="field">
+              <label for="outerDiameter">Outer diameter</label>
+              <input
+                id="outerDiameter"
+                type="number"
+                step="0.001"
+                min="0"
+                value="24"
+              />
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="field">
+              <label for="unit">Units</label>
+              <select id="unit">
+                <option value="ft" selected>feet</option>
+                <option value="in">inches</option>
+                <option value="m">meters</option>
+                <option value="mm">millimeters</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="field">
+              <label for="thickness">Wall thickness</label>
+              <input
+                id="thickness"
+                type="number"
+                step="0.001"
+                min="0"
+                value="0.125"
+              />
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="field">
+              <label for="frequency">Frequency</label>
+              <input
+                id="frequency"
+                type="number"
+                min="1"
+                max="10"
+                step="1"
+                value="4"
+              />
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="field">
+              <label for="cut">Dome cut</label>
+              <select id="cut">
+                <option value="hemisphere" selected>Hemisphere (z ≥ 0)</option>
+                <option value="full">Full sphere</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="field">
+              <label for="tolerance">Grouping tolerance</label>
+              <input
+                id="tolerance"
+                type="number"
+                step="0.0001"
+                min="0"
+                value="0.001"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top: 10px">
+          <button id="dlStruts" class="btn">Download struts CSV</button>
+          <button id="dlPanels" class="btn">Download panels CSV</button>
+          <div id="status" class="status grow">Ready</div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top: 16px">
+        <div class="col-6">
+          <div class="card pad-lg">
+            <h2>Strut types <span class="muted">(outer / inner)</span></h2>
+            <p id="summary" class="muted" style="margin-top: 8px">
+              Enter inputs and run the calculator.
+            </p>
+            <table id="strutTable" aria-label="Strut table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Centerline</th>
+                  <th>Outer</th>
+                  <th>Inner</th>
+                  <th>Bevel</th>
+                  <th>Qty</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p
+              id="strutPlaceholder"
+              class="muted"
+              style="margin-top: 8px; display: none"
+            >
+              Enter inputs and compute to populate strut lengths.
+            </p>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card pad-lg">
+            <h2>Triangle panels</h2>
+            <p id="panelIntro" class="muted" style="margin-top: 8px">
+              Panel grouping appears after computing.
+            </p>
+            <table id="panelTable" aria-label="Panel table">
+              <thead>
+                <tr>
+                  <th>Panel</th>
+                  <th>Edges</th>
+                  <th>Panels</th>
+                  <th>Dihedrals</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p
+              id="panelPlaceholder"
+              class="muted"
+              style="margin-top: 8px; display: none"
+            >
+              Panel composition and dihedrals will appear after running the
+              calculator.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card pad-lg" style="margin-top: 16px">
+        <div class="row" style="justify-content: space-between">
+          <h2>3D visualization • outer & inner struts</h2>
+          <button id="openFullscreen" class="btn" title="Open full screen">
+            Fullscreen
+          </button>
+        </div>
+
+        <div class="canvas-wrap" style="margin-top: 12px">
+          <canvas id="viz"></canvas>
+        </div>
+
+        <div class="row" style="margin-top: 10px">
+          <button id="resetView" class="btn">Reset view</button>
+          <button id="topView" class="btn">Top view</button>
+          <button id="sideView" class="btn">Side view</button>
+
+          <label class="row" style="gap: 6px; margin-left: 8px">
+            <input id="showOuter" type="checkbox" checked />
+            <span class="muted">Show outer struts</span>
+          </label>
+          <label class="row" style="gap: 6px">
+            <input id="showInner" type="checkbox" checked />
+            <span class="muted">Show inner struts</span>
+          </label>
+          <label class="row" style="gap: 6px; margin-left: auto">
+            <input id="showVertices" type="checkbox" checked />
+            <span class="muted">Show vertices</span>
+          </label>
+        </div>
+
+        <div id="legend" class="legend"></div>
+        <p class="muted" style="margin-top: 8px">
+          Drag to rotate, scroll to zoom. Warm colors show outer struts, cool
+          colors show inner struts for each type; use the toggles above to focus
+          on a layer.
+        </p>
+      </div>
+    </div>
+
+    <dialog id="fsDialog">
+      <div class="dialog-head">
+        <div style="font-weight: 700">
+          3D visualization • outer & inner struts
+        </div>
+        <button id="closeFullscreen" class="btn">Close</button>
+      </div>
+      <div class="dialog-body">
+        <div class="canvas-wrap" style="flex: 1">
+          <canvas id="vizFS"></canvas>
+        </div>
+        <div class="row">
+          <button id="resetViewFS" class="btn">Reset view</button>
+          <button id="topViewFS" class="btn">Top view</button>
+          <button id="sideViewFS" class="btn">Side view</button>
+
+          <label class="row" style="gap: 6px; margin-left: 8px">
+            <input id="showOuterFS" type="checkbox" checked />
+            <span class="muted">Show outer struts</span>
+          </label>
+          <label class="row" style="gap: 6px">
+            <input id="showInnerFS" type="checkbox" checked />
+            <span class="muted">Show inner struts</span>
+          </label>
+          <label class="row" style="gap: 6px; margin-left: auto">
+            <input id="showVerticesFS" type="checkbox" checked />
+            <span class="muted">Show vertices</span>
+          </label>
+        </div>
+        <div id="legendFS" class="legend"></div>
+      </div>
+    </dialog>
+
+    <script>
+      /* ===== Utilities ===== */
+      const warmPalette = [
+        "#ff6b6b",
+        "#ffa94d",
+        "#ffd43b",
+        "#fab005",
+        "#ff922b",
+      ];
+      const coolPalette = [
+        "#74c0fc",
+        "#4dabf7",
+        "#3bc9db",
+        "#69db7c",
+        "#38d9a9",
+      ];
+
+      const norm = ([x, y, z]) => Math.hypot(x, y, z);
+      const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+      const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+      const mul = (v, s) => [v[0] * s, v[1] * s, v[2] * s];
+      const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      const cross = (a, b) => [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+      ];
+      const unitVec = (v) => {
+        const n = norm(v);
+        return n ? [v[0] / n, v[1] / n, v[2] / n] : [0, 0, 0];
+      };
+      const radiansToDegrees = (r) => (r * 180) / Math.PI;
+
+      function icosahedron() {
+        const t = (1 + Math.sqrt(5)) / 2;
+        const verts = [
+          [-1, t, 0],
+          [1, t, 0],
+          [-1, -t, 0],
+          [1, -t, 0],
+          [0, -1, t],
+          [0, 1, t],
+          [0, -1, -t],
+          [0, 1, -t],
+          [t, 0, -1],
+          [t, 0, 1],
+          [-t, 0, -1],
+          [-t, 0, 1],
+        ].map(unitVec);
+        const faces = [
+          [0, 11, 5],
+          [0, 5, 1],
+          [0, 1, 7],
+          [0, 7, 10],
+          [0, 10, 11],
+          [1, 5, 9],
+          [5, 11, 4],
+          [11, 10, 2],
+          [10, 7, 6],
+          [7, 1, 8],
+          [3, 9, 4],
+          [3, 4, 2],
+          [3, 2, 6],
+          [3, 6, 8],
+          [3, 8, 9],
+          [4, 9, 5],
+          [2, 4, 11],
+          [6, 2, 10],
+          [8, 6, 7],
+          [9, 8, 1],
+        ];
+        return { verts, faces };
+      }
+      const keyFor = (v, q = 1e6) =>
+        `${Math.round(v[0] * q)}_${Math.round(v[1] * q)}_${Math.round(
+          v[2] * q
+        )}`;
+
+      function subdivideFace(a, b, c, f) {
+        const points = [];
+        for (let i = 0; i <= f; i++) {
+          for (let j = 0; j <= f - i; j++) {
+            const k = f - i - j;
+            const p = unitVec(
+              add(add(mul(a, i / f), mul(b, j / f)), mul(c, k / f))
+            );
+            points.push(p);
+          }
+        }
+        const idx = (i, j) => (i * (f + 1) - (i * (i - 1)) / 2 + j) | 0;
+        const tris = [];
+        for (let i = 0; i < f; i++) {
+          for (let j = 0; j < f - i; j++) {
+            const v0 = idx(i, j),
+              v1 = idx(i + 1, j),
+              v2 = idx(i, j + 1);
+            tris.push([v0, v1, v2]);
+            if (j < f - i - 1) {
+              const v3 = idx(i + 1, j + 1);
+              tris.push([v1, v3, v2]);
+            }
+          }
+        }
+        return { points, tris };
+      }
+
+      function buildGeodesic(frequency) {
+        const { verts, faces } = icosahedron();
+        const globalVerts = [],
+          vIndex = new Map(),
+          edges = new Set(),
+          triangles = [];
+        const addVertex = (p) => {
+          const key = keyFor(p);
+          if (vIndex.has(key)) return vIndex.get(key);
+          const idx = globalVerts.length;
+          globalVerts.push(p);
+          vIndex.set(key, idx);
+          return idx;
+        };
+        const addEdge = (i, j) => {
+          if (i === j) return;
+          const a = Math.min(i, j),
+            b = Math.max(i, j);
+          edges.add(`${a}-${b}`);
+        };
+        for (const [ia, ib, ic] of faces) {
+          const { points, tris } = subdivideFace(
+            verts[ia],
+            verts[ib],
+            verts[ic],
+            frequency
+          );
+          const mapLocal = points.map(addVertex);
+          for (const [p, q, r] of tris) {
+            const i = mapLocal[p],
+              j = mapLocal[q],
+              k = mapLocal[r];
+            addEdge(i, j);
+            addEdge(j, k);
+            addEdge(k, i);
+            triangles.push([i, j, k]);
+          }
+        }
+        return { vertices: globalVerts, edges, triangles };
+      }
+
+      function filterByCut(vertices, edges, triangles, cut) {
+        if (cut === "full") return { vertices, edges, triangles };
+        const keep = new Set();
+        vertices.forEach((v, i) => {
+          if (v[2] >= -1e-12) keep.add(i);
+        });
+        const filteredEdges = new Set();
+        for (const e of edges) {
+          const [a, b] = e.split("-").map(Number);
+          if (keep.has(a) && keep.has(b)) filteredEdges.add(e);
+        }
+        const filteredTris = [];
+        for (const [i, j, k] of triangles) {
+          if (keep.has(i) && keep.has(j) && keep.has(k))
+            filteredTris.push([i, j, k]);
+        }
+        return { vertices, edges: filteredEdges, triangles: filteredTris };
+      }
+
+      const edgeKey = (i, j) => (i < j ? `${i}-${j}` : `${j}-${i}`);
+      function faceNormal(a, b, c) {
+        return unitVec(cross(sub(b, a), sub(c, a)));
+      }
+
+      function computeDihedrals(vertices, triangles) {
+        const edgeFaces = new Map();
+        const faceData = triangles.map(([i, j, k]) => {
+          const a = vertices[i],
+            b = vertices[j],
+            c = vertices[k];
+          return { i, j, k, n: faceNormal(a, b, c) };
+        });
+        triangles.forEach(([i, j, k], fi) => {
+          [
+            [i, j],
+            [j, k],
+            [k, i],
+          ].forEach(([a, b]) => {
+            const key = edgeKey(a, b);
+            if (!edgeFaces.has(key)) edgeFaces.set(key, []);
+            edgeFaces.get(key).push(fi);
+          });
+        });
+        const edgeDihedral = new Map();
+        for (const [key, faces] of edgeFaces.entries()) {
+          if (faces.length === 2) {
+            const fA = faceData[faces[0]],
+              fB = faceData[faces[1]];
+            const angle = Math.acos(Math.max(-1, Math.min(1, dot(fA.n, fB.n))));
+            edgeDihedral.set(key, angle);
+          } else {
+            edgeDihedral.set(key, 0);
+          }
+        }
+        return edgeDihedral;
+      }
+
+      function groupByTolerance(values, tol) {
+        const groups = [];
+        const sorted = [...values].sort((a, b) => a - b);
+        for (const v of sorted) {
+          const existing = groups.find((g) => Math.abs(g.rep - v) <= tol);
+          if (existing) {
+            existing.items.push(v);
+            existing.count += 1;
+            existing.rep =
+              (existing.rep * (existing.count - 1) + v) / existing.count;
+          } else {
+            groups.push({ rep: v, items: [v], count: 1, label: "" });
+          }
+        }
+        groups.forEach((g, i) => (g.label = String.fromCharCode(65 + i)));
+        return groups;
+      }
+
+      function precisionForUnit(unit) {
+        if (unit === "mm") return 2;
+        if (unit === "m") return 4;
+        return 3;
+      }
+      const formatLength = (value, unit) =>
+        `${value.toFixed(precisionForUnit(unit))} ${unit}`;
+
+      /* ===== Visualization ===== */
+      function resizeCanvas(canvas, ctx) {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        return { width: rect.width, height: rect.height };
+      }
+      function projectPoint(point, width, height, view) {
+        const rotX = (p, a) => {
+          const c = Math.cos(a),
+            s = Math.sin(a);
+          return [p[0], p[1] * c - p[2] * s, p[1] * s + p[2] * c];
+        };
+        const rotY = (p, a) => {
+          const c = Math.cos(a),
+            s = Math.sin(a);
+          return [p[0] * c + p[2] * s, p[1], -p[0] * s + p[2] * c];
+        };
+        let r = rotX(point, view.rx);
+        r = rotY(r, view.ry);
+        const scale = Math.min(width, height) * 0.05 * view.zoom;
+        const x = width / 2 + r[0] * scale + view.panX;
+        const y = height / 2 - r[1] * scale + view.panY;
+        return { x, y, z: r[2] };
+      }
+      const defaultView = { rx: -0.3, ry: 0.25, zoom: 0.8, panX: 0, panY: 0 };
+
+      /* ===== App State ===== */
+      const state = {
+        inputs: {
+          outerDiameter: 24,
+          unit: "ft",
+          thickness: 0.125,
+          frequency: 4,
+          tolerance: 0.001,
+          cut: "hemisphere",
+        },
+        result: null,
+        vis: null,
+        view: { ...defaultView },
+        showOuter: true,
+        showInner: true,
+        showVertices: true,
+      };
+
+      /* ===== DOM ===== */
+      const el = (id) => document.getElementById(id);
+      const $outerDiameter = el("outerDiameter");
+      const $unit = el("unit");
+      const $thickness = el("thickness");
+      const $frequency = el("frequency");
+      const $tolerance = el("tolerance");
+      const $cut = el("cut");
+
+      const $status = el("status");
+      const $summary = el("summary");
+      const $strutTable = el("strutTable").querySelector("tbody");
+      const $strutPlaceholder = el("strutPlaceholder");
+      const $panelTable = el("panelTable").querySelector("tbody");
+      const $panelIntro = el("panelIntro");
+      const $panelPlaceholder = el("panelPlaceholder");
+
+      const $viz = el("viz");
+      const $legend = el("legend");
+
+      const $resetView = el("resetView");
+      const $topView = el("topView");
+      const $sideView = el("sideView");
+      const $showOuter = el("showOuter");
+      const $showInner = el("showInner");
+      const $showVertices = el("showVertices");
+
+      const $dlStruts = el("dlStruts");
+      const $dlPanels = el("dlPanels");
+
+      const $openFS = el("openFullscreen");
+      const $dialog = el("fsDialog");
+      const $vizFS = el("vizFS");
+      const $legendFS = el("legendFS");
+      const $closeFS = el("closeFullscreen");
+      const $resetViewFS = el("resetViewFS");
+      const $topViewFS = el("topViewFS");
+      const $sideViewFS = el("sideViewFS");
+      const $showOuterFS = el("showOuterFS");
+      const $showInnerFS = el("showInnerFS");
+      const $showVerticesFS = el("showVerticesFS");
+
+      /* ===== CSV ===== */
+      function downloadCsv(filename, rows) {
+        const csv = rows.map((r) => r.join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      /* ===== Compute ===== */
+      function computeAll() {
+        const dia = Number($outerDiameter.value);
+        const freq = Math.max(
+          1,
+          Math.min(10, Math.round(Number($frequency.value) || 4))
+        );
+        const thick = Math.max(0, Math.abs(Number($thickness.value) || 0));
+        const tol = Math.abs(Number($tolerance.value) || 0.001);
+        const unit = $unit.value;
+        const cut = $cut.value;
+
+        if (!(dia > 0)) {
+          setStatus("Enter a positive outer diameter.", "error");
+          return;
+        }
+        setStatus("Computing…", "busy");
+
+        const radiusOuter = dia / 2;
+        const radiusMid = Math.max(1e-9, radiusOuter - thick / 2);
+        const radiusInner = Math.max(1e-9, radiusOuter - thick);
+
+        const built = buildGeodesic(freq);
+        const { vertices, edges, triangles } = filterByCut(
+          built.vertices,
+          built.edges,
+          built.triangles,
+          cut
+        );
+        const edgeDihedral = computeDihedrals(vertices, triangles);
+
+        const edgeLengthMid = new Map();
+        for (const edge of edges) {
+          const [a, b] = edge.split("-").map(Number);
+          const chordUnit = norm(sub(vertices[a], vertices[b]));
+          edgeLengthMid.set(edge, chordUnit * radiusMid);
+        }
+
+        const groups = groupByTolerance(
+          Array.from(edgeLengthMid.values()),
+          tol
+        );
+        const edgeGroup = new Map();
+        for (const edge of edges) {
+          const length = edgeLengthMid.get(edge);
+          let best = null,
+            bestDiff = Infinity;
+          for (const g of groups) {
+            const diff = Math.abs(g.rep - length);
+            if (diff < bestDiff) {
+              bestDiff = diff;
+              best = g;
+            }
+          }
+          edgeGroup.set(edge, best && bestDiff <= tol ? best.label : "?");
+        }
+
+        const typeAggregates = new Map();
+        for (const edge of edges) {
+          const label = edgeGroup.get(edge);
+          const midLength = edgeLengthMid.get(edge);
+          const dihedral = edgeDihedral.get(edge) || 0;
+          const bevelRad = dihedral / 2;
+          const outerLength = midLength + thick * Math.tan(bevelRad);
+          const innerLength = Math.max(
+            0,
+            midLength - thick * Math.tan(bevelRad)
+          );
+          if (!typeAggregates.has(label))
+            typeAggregates.set(label, {
+              mid: 0,
+              outer: 0,
+              inner: 0,
+              bevel: 0,
+              qty: 0,
+            });
+          const r = typeAggregates.get(label);
+          r.mid += midLength;
+          r.outer += outerLength;
+          r.inner += innerLength;
+          r.bevel += bevelRad;
+          r.qty += 1;
+        }
+
+        const strutTypes = Array.from(typeAggregates.entries())
+          .map(([label, agg]) => {
+            const { qty } = agg;
+            return {
+              label,
+              mid: agg.mid / qty,
+              outer: agg.outer / qty,
+              inner: agg.inner / qty,
+              bevelDeg: radiansToDegrees(agg.bevel / qty),
+              qty,
+            };
+          })
+          .sort((a, b) => a.mid - b.mid);
+
+        const triangleMap = new Map();
+        for (const [i, j, k] of triangles) {
+          const labels = [
+            edgeGroup.get(edgeKey(i, j)),
+            edgeGroup.get(edgeKey(j, k)),
+            edgeGroup.get(edgeKey(k, i)),
+          ]
+            .sort()
+            .join("-");
+          const dihedrals = [
+            radiansToDegrees(edgeDihedral.get(edgeKey(i, j)) || 0),
+            radiansToDegrees(edgeDihedral.get(edgeKey(j, k)) || 0),
+            radiansToDegrees(edgeDihedral.get(edgeKey(k, i)) || 0),
+          ].sort((a, b) => a - b);
+          if (!triangleMap.has(labels))
+            triangleMap.set(labels, { count: 0, sums: [0, 0, 0] });
+          const entry = triangleMap.get(labels);
+          entry.count += 1;
+          entry.sums[0] += dihedrals[0];
+          entry.sums[1] += dihedrals[1];
+          entry.sums[2] += dihedrals[2];
+        }
+
+        const panelGroups = Array.from(triangleMap.entries())
+          .map(([signature, entry], idx) => ({
+            label: `T${idx + 1}`,
+            composition: signature.replaceAll("-", " + "),
+            count: entry.count,
+            dihedrals: entry.sums.map((s) => s / entry.count),
+          }))
+          .sort((a, b) => a.dihedrals[0] - b.dihedrals[0]);
+
+        const totalStruts = edges.size;
+
+        state.result = {
+          strutTypes,
+          panelGroups,
+          strutGroups: groups,
+          summary: {
+            frequency: freq,
+            radiusOuter,
+            radiusMid,
+            radiusInner,
+            thickness: thick,
+            tolerance: tol,
+            totalStruts,
+          },
+          unit,
+        };
+        state.vis = {
+          outerVerts: vertices.map((v) => mul(v, radiusOuter)),
+          innerVerts: vertices.map((v) => mul(v, radiusInner)),
+          edges: Array.from(edges),
+          edgeGroup,
+          strutGroups: groups,
+        };
+
+        setStatus("Done", "done");
+        state.view = { ...defaultView };
+        renderAll();
+      }
+
+      /* ===== Rendering ===== */
+      function setStatus(message, tone) {
+        $status.textContent = message;
+        $status.style.color =
+          tone === "error"
+            ? "#f87171"
+            : tone === "done"
+            ? "#10b981"
+            : tone === "busy"
+            ? "#38bdf8"
+            : "var(--muted)";
+      }
+
+      function renderTables() {
+        const res = state.result;
+        const unit = state.result?.unit || $unit.value;
+        const prec = precisionForUnit(unit);
+
+        // Summary
+        if (!res) {
+          $summary.textContent = "Enter inputs and run the calculator.";
+        } else {
+          const s = res.summary;
+          $summary.textContent = `Frequency ${
+            s.frequency
+          }V • Outer radius ${formatLength(
+            s.radiusOuter,
+            unit
+          )} • Mid radius ${formatLength(
+            s.radiusMid,
+            unit
+          )} • Inner radius ${formatLength(
+            s.radiusInner,
+            unit
+          )} • Thickness ${formatLength(s.thickness, unit)} • ${
+            res.strutTypes.length
+          } strut types`;
+        }
+
+        // Struts
+        $strutTable.innerHTML = "";
+        if (!res || res.strutTypes.length === 0) {
+          $strutPlaceholder.style.display = "";
+        } else {
+          $strutPlaceholder.style.display = "none";
+          for (const row of res.strutTypes) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+        <td><strong>${row.label}</strong></td>
+        <td><code>${row.mid.toFixed(prec)}</code></td>
+        <td><code>${row.outer.toFixed(prec)}</code></td>
+        <td><code>${row.inner.toFixed(prec)}</code></td>
+        <td>${row.bevelDeg.toFixed(2)}°</td>
+        <td>${row.qty}</td>`;
+            $strutTable.appendChild(tr);
+          }
+        }
+
+        // Panels
+        $panelTable.innerHTML = "";
+        if (!res || res.panelGroups.length === 0) {
+          $panelIntro.textContent = "Panel grouping appears after computing.";
+          $panelPlaceholder.style.display = "none";
+        } else {
+          $panelIntro.textContent = `${res.panelGroups.length} panel classes by edge composition.`;
+          for (const panel of res.panelGroups) {
+            const tr = document.createElement("tr");
+            const dihs = panel.dihedrals
+              .map((d) => `<code>${d.toFixed(2)}°</code>`)
+              .join(" ");
+            tr.innerHTML = `
+        <td><strong>${panel.label}</strong></td>
+        <td>${panel.composition}</td>
+        <td>${panel.count}</td>
+        <td class="row" style="gap:8px;">${dihs}</td>`;
+            $panelTable.appendChild(tr);
+          }
+        }
+      }
+
+      function renderLegend(containerId) {
+        const container = containerId === "fs" ? $legendFS : $legend;
+        container.innerHTML = "";
+        const groups = state.result?.strutGroups || [];
+        if (!groups.length) return;
+        groups.forEach((g, i) => {
+          const item = document.createElement("div");
+          item.className = "row";
+          item.style.gap = "8px";
+          item.style.alignItems = "center";
+          const sw1 = document.createElement("div");
+          sw1.className = "sw";
+          sw1.style.background = warmPalette[i % warmPalette.length];
+          const sw2 = document.createElement("div");
+          sw2.className = "sw";
+          sw2.style.background = coolPalette[i % coolPalette.length];
+          const label = document.createElement("span");
+          label.className = "muted";
+          label.style.fontSize = "12px";
+          label.textContent = g.label;
+          item.append(sw1, sw2, label);
+          container.appendChild(item);
+        });
+      }
+
+      function attachCanvasHandlers(canvas, which = "main") {
+        const view = state.view;
+        let isDragging = false,
+          last = { x: 0, y: 0 };
+        const onDown = (ev) => {
+          const rect = canvas.getBoundingClientRect();
+          const x =
+            (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+          const y =
+            (ev.touches ? ev.touches[0].clientY : ev.clientY) - rect.top;
+          last = { x, y };
+          isDragging = true;
+        };
+        const onMove = (ev) => {
+          if (!isDragging) return;
+          const rect = canvas.getBoundingClientRect();
+          const x =
+            (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+          const y =
+            (ev.touches ? ev.touches[0].clientY : ev.clientY) - rect.top;
+          const dx = x - last.x,
+            dy = y - last.y;
+          state.view = {
+            ...state.view,
+            ry: state.view.ry + dx * 0.01,
+            rx: state.view.rx + dy * 0.01,
+          };
+          last = { x, y };
+          renderCanvas(canvas);
+        };
+        const onUp = () => {
+          isDragging = false;
+        };
+
+        canvas.addEventListener("mousedown", onDown);
+        canvas.addEventListener("mousemove", onMove);
+        canvas.addEventListener("mouseup", onUp);
+        canvas.addEventListener("mouseleave", onUp);
+
+        canvas.addEventListener(
+          "touchstart",
+          (e) => {
+            if (e.touches.length === 1) onDown(e);
+          },
+          { passive: true }
+        );
+        canvas.addEventListener(
+          "touchmove",
+          (e) => {
+            if (e.touches.length === 1) onMove(e);
+          },
+          { passive: true }
+        );
+        canvas.addEventListener("touchend", onUp);
+
+        canvas.addEventListener(
+          "wheel",
+          (e) => {
+            e.preventDefault();
+            const f = e.deltaY > 0 ? 0.9 : 1.1;
+            state.view = {
+              ...state.view,
+              zoom: Math.max(0.02, Math.min(12, state.view.zoom * f)),
+            };
+            renderCanvas(canvas);
+          },
+          { passive: false }
+        );
+      }
+
+      function renderCanvas(canvas) {
+        const ctx = canvas.getContext("2d");
+        const { width, height } = resizeCanvas(canvas, ctx);
+        const data = state.vis;
+        if (!data) return;
+
+        const projOuter = data.outerVerts.map((v) =>
+          projectPoint(v, width, height, state.view)
+        );
+        const projInner = data.innerVerts.map((v) =>
+          projectPoint(v, width, height, state.view)
+        );
+        const drawEdges = (proj, palette) => {
+          const items = data.edges.map((edge) => {
+            const [a, b] = edge.split("-").map(Number);
+            const p1 = proj[a],
+              p2 = proj[b];
+            const z = (p1.z + p2.z) / 2;
+            const label = data.edgeGroup.get(edge);
+            const idx = (state.result?.strutGroups || []).findIndex(
+              (g) => g.label === label
+            );
+            const color = idx >= 0 ? palette[idx % palette.length] : "#64748b";
+            return { p1, p2, z, color };
+          });
+          items.sort((a, b) => a.z - b.z);
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          items.forEach(({ p1, p2, color }) => {
+            ctx.strokeStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          });
+        };
+
+        if (state.showOuter) drawEdges(projOuter, warmPalette);
+        if (state.showInner) drawEdges(projInner, coolPalette);
+
+        if (state.showVertices) {
+          ctx.fillStyle = "rgba(238,242,255,0.85)";
+          projOuter.forEach((p) => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+      }
+
+      function renderAll() {
+        renderTables();
+        renderLegend("main");
+        renderCanvas($viz);
+        if ($dialog.open) {
+          renderLegend("fs");
+          renderCanvas($vizFS);
+        }
+      }
+
+      /* ===== Events & Wiring ===== */
+      ["change", "input"].forEach((evt) => {
+        [
+          $outerDiameter,
+          $unit,
+          $thickness,
+          $frequency,
+          $tolerance,
+          $cut,
+        ].forEach((node) => {
+          node.addEventListener(evt, () => computeAll());
+        });
+      });
+
+      $resetView.addEventListener("click", () => {
+        state.view = { ...defaultView };
+        renderCanvas($viz);
+      });
+      $topView.addEventListener("click", () => {
+        state.view = { ...state.view, rx: 0, ry: 0 };
+        renderCanvas($viz);
+      });
+      $sideView.addEventListener("click", () => {
+        state.view = { ...state.view, rx: -Math.PI / 2, ry: 0 };
+        renderCanvas($viz);
+      });
+
+      $showOuter.addEventListener("change", () => {
+        state.showOuter = $showOuter.checked;
+        renderCanvas($viz);
+      });
+      $showInner.addEventListener("change", () => {
+        state.showInner = $showInner.checked;
+        renderCanvas($viz);
+      });
+      $showVertices.addEventListener("change", () => {
+        state.showVertices = $showVertices.checked;
+        renderCanvas($viz);
+      });
+
+      $dlStruts.addEventListener("click", () => {
+        if (!state.result) return;
+        const unit = state.result.unit;
+        const rows = [
+          [
+            "Type",
+            `Centerline (${unit})`,
+            `Outer (${unit})`,
+            `Inner (${unit})`,
+            "Bevel (deg)",
+            "Quantity",
+          ],
+          ...state.result.strutTypes.map((s) => [
+            s.label,
+            s.mid.toFixed(precisionForUnit(unit)),
+            s.outer.toFixed(precisionForUnit(unit)),
+            s.inner.toFixed(precisionForUnit(unit)),
+            s.bevelDeg.toFixed(2),
+            String(s.qty),
+          ]),
+        ];
+        downloadCsv(
+          `geodesic_struts_outer_inner_${$outerDiameter.value}${unit}.csv`,
+          rows
+        );
+      });
+      $dlPanels.addEventListener("click", () => {
+        if (!state.result) return;
+        const unit = state.result.unit;
+        const rows = [
+          [
+            "Panel",
+            "Panels",
+            "Edges",
+            "Dihedral 1 (deg)",
+            "Dihedral 2 (deg)",
+            "Dihedral 3 (deg)",
+          ],
+          ...state.result.panelGroups.map((p) => [
+            p.label,
+            String(p.count),
+            p.composition,
+            ...p.dihedrals.map((d) => d.toFixed(2)),
+          ]),
+        ];
+        downloadCsv(
+          `geodesic_panel_dihedrals_${$outerDiameter.value}${unit}.csv`,
+          rows
+        );
+      });
+
+      /* Fullscreen dialog */
+      $openFS.addEventListener("click", () => {
+        $dialog.showModal();
+        renderLegend("fs");
+        renderCanvas($vizFS);
+      });
+      $closeFS.addEventListener("click", () => {
+        $dialog.close();
+        renderLegend("main");
+        renderCanvas($viz);
+      });
+
+      $resetViewFS.addEventListener("click", () => {
+        state.view = { ...defaultView };
+        renderCanvas($vizFS);
+      });
+      $topViewFS.addEventListener("click", () => {
+        state.view = { ...state.view, rx: 0, ry: 0 };
+        renderCanvas($vizFS);
+      });
+      $sideViewFS.addEventListener("click", () => {
+        state.view = { ...state.view, rx: -Math.PI / 2, ry: 0 };
+        renderCanvas($vizFS);
+      });
+
+      $showOuterFS.addEventListener("change", () => {
+        state.showOuter = $showOuterFS.checked;
+        renderCanvas($vizFS);
+      });
+      $showInnerFS.addEventListener("change", () => {
+        state.showInner = $showInnerFS.checked;
+        renderCanvas($vizFS);
+      });
+      $showVerticesFS.addEventListener("change", () => {
+        state.showVertices = $showVerticesFS.checked;
+        renderCanvas($vizFS);
+      });
+
+      /* Attach canvas interactions */
+      attachCanvasHandlers($viz, "main");
+      attachCanvasHandlers($vizFS, "fs");
+
+      /* Re-render on resize */
+      window.addEventListener("resize", () => {
+        renderCanvas($viz);
+        if ($dialog.open) renderCanvas($vizFS);
+      });
+
+      /* Initial compute & render */
+      computeAll();
+    </script>
+  </body>
+</html>
