@@ -1,13 +1,1218 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RonRey</title>
-    <script type="module" crossorigin src="./assets/index-3rHFcfvp.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DDsMk51Z.css">
+    <title>Geodesic Dome Calculator</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Arial, sans-serif;
+        background: linear-gradient(
+          180deg,
+          #071022 0%,
+          #071026 40%,
+          #07102a 100%
+        );
+        color: #e6eef8;
+        min-height: 100vh;
+        padding: 16px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: #06121a;
+        border: 1px solid #1a2332;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: #9fb0c8;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+
+      .input-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .input-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #9fb0c8;
+      }
+
+      input,
+      select {
+        background: #0a1929;
+        border: 1px solid #1a2332;
+        border-radius: 6px;
+        padding: 10px 12px;
+        color: #e6eef8;
+        font-size: 14px;
+        font-family: inherit;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #4f46e5;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 16px;
+      }
+
+      button {
+        background: transparent;
+        border: 1px solid #4f46e5;
+        color: #4f46e5;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.2s;
+      }
+
+      button:hover:not(:disabled) {
+        background: #4f46e522;
+      }
+
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .status {
+        margin-left: auto;
+        padding: 6px 12px;
+        border: 1px solid #1a2332;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid #1a2332;
+      }
+
+      th {
+        font-weight: 600;
+        color: #9fb0c8;
+      }
+
+      code {
+        background: #0a1929;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+      }
+
+      .strut-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .strut-color {
+        width: 20px;
+        height: 4px;
+        border-radius: 2px;
+      }
+
+      #canvas {
+        width: 100%;
+        height: 420px;
+        background: #0a1929;
+        border-radius: 8px;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      #canvas:active {
+        cursor: grabbing;
+      }
+
+      .controls {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 16px;
+      }
+
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        margin-left: auto;
+      }
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #9fb0c8;
+      }
+
+      .fullscreen-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: #4f46e5;
+        border: none;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .fullscreen-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #071022;
+        z-index: 1000;
+        flex-direction: column;
+      }
+
+      .fullscreen-modal.active {
+        display: flex;
+      }
+
+      .modal-header {
+        background: #4f46e5;
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-content {
+        flex: 1;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow: auto;
+      }
+
+      #fullscreenCanvas {
+        flex: 1;
+        background: #0a1929;
+        border-radius: 8px;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      @media (max-width: 640px) {
+        .input-group {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div class="container">
+      <div class="card">
+        <h1>4V Geodesic Dome — Strut Lengths from Diameter</h1>
+        <p class="subtitle">
+          Enter your dome diameter and retrieve unique strut lengths and
+          triangle panels for an icosa-based, Class I dome cut at the equator.
+          Lengths are straight chords between nodes.
+        </p>
+
+        <div class="input-group">
+          <div class="input-field">
+            <label for="diameter">Dome diameter</label>
+            <input
+              type="number"
+              id="diameter"
+              value="24"
+              step="0.001"
+              min="0"
+            />
+          </div>
+          <div class="input-field">
+            <label for="unit">Units</label>
+            <select id="unit">
+              <option value="ft">feet</option>
+              <option value="in">inches</option>
+              <option value="m">meters</option>
+              <option value="mm">millimeters</option>
+            </select>
+          </div>
+          <div class="input-field">
+            <label for="tolerance"
+              >Grouping tolerance (<span id="toleranceUnit">ft</span>)</label
+            >
+            <input
+              type="number"
+              id="tolerance"
+              value="0.001"
+              step="0.0001"
+              min="0"
+            />
+          </div>
+          <div class="input-field">
+            <label for="frequency">Frequency</label>
+            <input
+              type="number"
+              id="frequency"
+              value="4"
+              min="1"
+              max="10"
+              step="1"
+            />
+          </div>
+          <div class="input-field">
+            <label for="cut">Dome cut</label>
+            <select id="cut">
+              <option value="hemisphere">Hemisphere (z >= 0)</option>
+              <option value="full">Full sphere (all struts)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="downloadStruts">Download struts CSV</button>
+          <button id="downloadPanels">Download panels CSV</button>
+          <div class="status" id="status">Ready</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px">
+          Dome strut groups
+        </h2>
+        <p class="subtitle" id="strutSummary">
+          Enter inputs to see dome strut summary.
+        </p>
+        <div id="strutTable"></div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px">
+          Unique triangle panels
+        </h2>
+        <p class="subtitle" id="panelSummary">
+          Enter inputs to produce panel groupings.
+        </p>
+        <div id="panelTable"></div>
+      </div>
+
+      <div class="card" style="position: relative">
+        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 16px">
+          3D visualization
+        </h2>
+        <button class="fullscreen-btn" id="openFullscreen">⛶ Fullscreen</button>
+        <canvas id="canvas"></canvas>
+        <div class="controls">
+          <button id="resetView">Reset view</button>
+          <button id="topView">Top view</button>
+          <button id="sideView">Side view</button>
+          <label class="checkbox-label">
+            <input type="checkbox" id="showVertices" />
+            <span>Show vertices</span>
+          </label>
+        </div>
+        <div class="legend" id="legend"></div>
+        <p class="subtitle" style="margin-top: 16px">
+          Drag to rotate, scroll to zoom. Each color represents a distinct strut
+          group.
+        </p>
+      </div>
+    </div>
+
+    <div class="fullscreen-modal" id="fullscreenModal">
+      <div class="modal-header">
+        <h2 style="font-size: 20px; font-weight: 600">3D visualization</h2>
+        <button
+          id="closeFullscreen"
+          style="
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+          "
+        >
+          ✕
+        </button>
+      </div>
+      <div class="modal-content">
+        <canvas id="fullscreenCanvas"></canvas>
+        <div class="controls">
+          <button id="resetViewFs">Reset view</button>
+          <button id="topViewFs">Top view</button>
+          <button id="sideViewFs">Side view</button>
+          <label class="checkbox-label">
+            <input type="checkbox" id="showVerticesFs" />
+            <span>Show vertices</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const strutColors = [
+        "#ff4757",
+        "#3742fa",
+        "#2ed573",
+        "#ffa502",
+        "#ff6b9d",
+        "#5f27cd",
+        "#00d2d3",
+        "#ff9f43",
+        "#1e90ff",
+        "#32cd32",
+        "#ff1493",
+        "#ffd700",
+      ];
+
+      let state = {
+        diameter: 24,
+        unit: "ft",
+        tolerance: 0.001,
+        frequency: 4,
+        cut: "hemisphere",
+        result: null,
+        visData: null,
+        showVertices: false,
+        viewState: {
+          rotationX: -0.3,
+          rotationY: 0.2,
+          zoom: 0.8,
+          panX: 0,
+          panY: 0,
+        },
+        isDragging: false,
+        lastPointer: { x: 0, y: 0 },
+        activeCanvas: null,
+        activeCtx: null,
+      };
+
+      // Math utilities
+      function norm([x, y, z]) {
+        return Math.hypot(x, y, z);
+      }
+
+      function add(a, b) {
+        return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+      }
+
+      function sub(a, b) {
+        return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+      }
+
+      function mul(v, s) {
+        return [v[0] * s, v[1] * s, v[2] * s];
+      }
+
+      function unitVec(v) {
+        const n = norm(v);
+        return n ? [v[0] / n, v[1] / n, v[2] / n] : [0, 0, 0];
+      }
+
+      function rotateX([x, y, z], angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        return [x, y * cos - z * sin, y * sin + z * cos];
+      }
+
+      function rotateY([x, y, z], angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        return [x * cos + z * sin, y, -x * sin + z * cos];
+      }
+
+      function keyFor(v) {
+        const q = 1e6;
+        return `${Math.round(v[0] * q)}_${Math.round(v[1] * q)}_${Math.round(
+          v[2] * q
+        )}`;
+      }
+
+      function icosahedron() {
+        const t = (1 + Math.sqrt(5)) / 2;
+        const baseVerts = [
+          [-1, t, 0],
+          [1, t, 0],
+          [-1, -t, 0],
+          [1, -t, 0],
+          [0, -1, t],
+          [0, 1, t],
+          [0, -1, -t],
+          [0, 1, -t],
+          [t, 0, -1],
+          [t, 0, 1],
+          [-t, 0, -1],
+          [-t, 0, 1],
+        ];
+        const verts = baseVerts.map((coords) => unitVec(coords));
+        const faces = [
+          [0, 11, 5],
+          [0, 5, 1],
+          [0, 1, 7],
+          [0, 7, 10],
+          [0, 10, 11],
+          [1, 5, 9],
+          [5, 11, 4],
+          [11, 10, 2],
+          [10, 7, 6],
+          [7, 1, 8],
+          [3, 9, 4],
+          [3, 4, 2],
+          [3, 2, 6],
+          [3, 6, 8],
+          [3, 8, 9],
+          [4, 9, 5],
+          [2, 4, 11],
+          [6, 2, 10],
+          [8, 6, 7],
+          [9, 8, 1],
+        ];
+        return { verts, faces };
+      }
+
+      function subdivideFace(a, b, c, f) {
+        const points = [];
+        for (let i = 0; i <= f; i++) {
+          for (let j = 0; j <= f - i; j++) {
+            const k = f - i - j;
+            const p = unitVec(
+              add(add(mul(a, i / f), mul(b, j / f)), mul(c, k / f))
+            );
+            points.push(p);
+          }
+        }
+        const idx = (i, j) => (i * (f + 1) - (i * (i - 1)) / 2 + j) | 0;
+        const tris = [];
+        for (let i = 0; i < f; i++) {
+          for (let j = 0; j < f - i; j++) {
+            const v0 = idx(i, j);
+            const v1 = idx(i + 1, j);
+            const v2 = idx(i, j + 1);
+            tris.push([v0, v1, v2]);
+            if (j < f - i - 1) {
+              const v3 = idx(i + 1, j + 1);
+              tris.push([v1, v3, v2]);
+            }
+          }
+        }
+        return { points, tris };
+      }
+
+      function buildGeodesic(frequency) {
+        const { verts, faces } = icosahedron();
+        const globalVerts = [];
+        const vIndex = new Map();
+        const edges = new Set();
+        const triangles = [];
+
+        const addVertex = (p) => {
+          const key = keyFor(p);
+          if (vIndex.has(key)) return vIndex.get(key);
+          const idx = globalVerts.length;
+          globalVerts.push(p);
+          vIndex.set(key, idx);
+          return idx;
+        };
+
+        const addEdge = (i, j) => {
+          if (i === j) return;
+          const a = Math.min(i, j);
+          const b = Math.max(i, j);
+          edges.add(`${a}-${b}`);
+        };
+
+        for (const [ia, ib, ic] of faces) {
+          const { points, tris } = subdivideFace(
+            verts[ia],
+            verts[ib],
+            verts[ic],
+            frequency
+          );
+          const mapLocalToGlobal = points.map(addVertex);
+          for (const [p, q, r] of tris) {
+            const i = mapLocalToGlobal[p];
+            const j = mapLocalToGlobal[q];
+            const k = mapLocalToGlobal[r];
+            addEdge(i, j);
+            addEdge(j, k);
+            addEdge(k, i);
+            triangles.push([i, j, k]);
+          }
+        }
+
+        return { vertices: globalVerts, edges, triangles };
+      }
+
+      function filterByCut(vertices, edges, triangles, cut) {
+        if (cut === "full") return { vertices, edges, triangles };
+
+        const keep = new Set();
+        vertices.forEach((v, idx) => {
+          if (v[2] >= -1e-12) keep.add(idx);
+        });
+
+        const filteredEdges = new Set();
+        for (const e of edges) {
+          const [a, b] = e.split("-").map(Number);
+          if (keep.has(a) && keep.has(b)) filteredEdges.add(e);
+        }
+
+        const filteredTriangles = [];
+        for (const [i, j, k] of triangles) {
+          if (keep.has(i) && keep.has(j) && keep.has(k))
+            filteredTriangles.push([i, j, k]);
+        }
+
+        return { vertices, edges: filteredEdges, triangles: filteredTriangles };
+      }
+
+      function groupByTolerance(lengths, tol) {
+        const groups = [];
+        const sorted = [...lengths].sort((a, b) => a - b);
+        for (const value of sorted) {
+          const existing = groups.find((g) => Math.abs(g.rep - value) <= tol);
+          if (existing) {
+            existing.items.push(value);
+            existing.count += 1;
+            existing.rep =
+              (existing.rep * (existing.count - 1) + value) / existing.count;
+          } else {
+            groups.push({ rep: value, items: [value], count: 1, label: "" });
+          }
+        }
+        groups.forEach((g, idx) => {
+          g.label = String.fromCharCode(65 + idx);
+        });
+        return groups;
+      }
+
+      function precisionForUnit(unit) {
+        if (unit === "mm") return 2;
+        if (unit === "m") return 4;
+        return 3;
+      }
+
+      function panelKeyFromTriplet(values, tol) {
+        const safeTol = Math.max(tol, 1e-9);
+        const bins = [...values]
+          .sort((a, b) => a - b)
+          .map((length) => Math.round(length / safeTol));
+        return bins.join("-");
+      }
+
+      function findGroupLabel(length, groups) {
+        let best = null;
+        let bestDiff = Infinity;
+        for (const g of groups) {
+          const diff = Math.abs(g.mean - length);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            best = g.label;
+          }
+        }
+        return best;
+      }
+
+      function compute() {
+        const dia = state.diameter;
+        const freq = Math.max(1, Math.min(10, Math.round(state.frequency)));
+        const tol = Math.max(Math.abs(state.tolerance), 1e-6);
+
+        if (!Number.isFinite(dia) || dia <= 0) {
+          document.getElementById("status").textContent =
+            "Enter a positive diameter.";
+          return;
+        }
+
+        const radius = dia / 2;
+        const built = buildGeodesic(freq);
+        const filtered = filterByCut(
+          built.vertices,
+          built.edges,
+          built.triangles,
+          state.cut
+        );
+
+        const edgeLengths = [];
+        const edgeToLength = new Map();
+
+        for (const edge of filtered.edges) {
+          const [a, b] = edge.split("-").map(Number);
+          const diff = sub(filtered.vertices[a], filtered.vertices[b]);
+          const length = norm(diff) * radius;
+          edgeLengths.push(length);
+          edgeToLength.set(edge, length);
+        }
+
+        const grouped = groupByTolerance(edgeLengths, tol);
+        const strutGroups = grouped.map((group, index) => {
+          const mean =
+            group.items.reduce((sum, value) => sum + value, 0) /
+            group.items.length;
+          return {
+            ...group,
+            mean,
+            color: strutColors[index % strutColors.length],
+          };
+        });
+
+        const edgeStrutMap = new Map();
+        for (const edge of filtered.edges) {
+          const length = edgeToLength.get(edge);
+          if (length == null) continue;
+          const label = findGroupLabel(length, strutGroups);
+          if (label) edgeStrutMap.set(edge, label);
+        }
+
+        const panelMap = new Map();
+        for (const [i, j, k] of filtered.triangles) {
+          const a =
+            norm(sub(filtered.vertices[i], filtered.vertices[j])) * radius;
+          const b =
+            norm(sub(filtered.vertices[j], filtered.vertices[k])) * radius;
+          const c =
+            norm(sub(filtered.vertices[k], filtered.vertices[i])) * radius;
+          const sortedTriplet = [a, b, c].sort((m, n) => m - n);
+          const key = panelKeyFromTriplet(sortedTriplet, tol);
+          const current = panelMap.get(key);
+          if (current) {
+            current.count += 1;
+            current.sums[0] += sortedTriplet[0];
+            current.sums[1] += sortedTriplet[1];
+            current.sums[2] += sortedTriplet[2];
+          } else {
+            panelMap.set(key, {
+              count: 1,
+              sums: [sortedTriplet[0], sortedTriplet[1], sortedTriplet[2]],
+            });
+          }
+        }
+
+        const panels = Array.from(panelMap.values())
+          .map((entry, idx) => {
+            const avgs = [
+              entry.sums[0] / entry.count,
+              entry.sums[1] / entry.count,
+              entry.sums[2] / entry.count,
+            ];
+            const labels = [...avgs]
+              .sort((a, b) => a - b)
+              .map((val) => findGroupLabel(val, strutGroups) || "?")
+              .sort();
+            const parts = [];
+            let run = 1;
+            for (let i = 1; i <= labels.length; i++) {
+              if (i < labels.length && labels[i] === labels[i - 1]) {
+                run += 1;
+              } else {
+                parts.push(`${run}x${labels[i - 1]}`);
+                run = 1;
+              }
+            }
+            return {
+              label: `T${idx + 1}`,
+              count: entry.count,
+              avgs,
+              composition: parts.join(" + "),
+            };
+          })
+          .sort((a, b) => a.avgs[0] - b.avgs[0])
+          .map((panel, idx) => ({ ...panel, label: `T${idx + 1}` }));
+
+        const scaledVertices = filtered.vertices.map((vertex) =>
+          mul(vertex, radius)
+        );
+
+        state.result = {
+          strutGroups,
+          panelGroups: panels,
+          totalStruts: edgeLengths.length,
+          frequency: freq,
+          radius,
+          tolerance: tol,
+          unit: state.unit,
+          cut: state.cut,
+        };
+
+        state.visData = {
+          vertices: scaledVertices,
+          edges: Array.from(filtered.edges),
+          edgeStrutMap,
+        };
+
+        state.viewState = {
+          rotationX: -0.3,
+          rotationY: 0.2,
+          zoom: 0.8,
+          panX: 0,
+          panY: 0,
+        };
+        document.getElementById("status").textContent = "Done";
+
+        updateUI();
+        render();
+      }
+
+      function updateUI() {
+        const result = state.result;
+        if (!result) return;
+
+        const prec = precisionForUnit(result.unit);
+        const tolText = `${result.tolerance.toFixed(prec)} ${result.unit}`;
+
+        document.getElementById("strutSummary").textContent =
+          `Frequency ${result.frequency}V • Radius ${result.radius.toFixed(
+            prec
+          )} ${result.unit} • Cut: ${result.cut}. ` +
+          `${result.strutGroups.length} unique strut length${
+            result.strutGroups.length === 1 ? "" : "s"
+          } ` +
+          `(tolerance ${tolText}); total struts: ${result.totalStruts}.`;
+
+        const expected =
+          result.frequency === 3
+            ? "approx 2"
+            : result.frequency === 4
+            ? "approx 5"
+            : "—";
+        document.getElementById("panelSummary").textContent =
+          `${result.panelGroups.length} unique triangle panel type${
+            result.panelGroups.length === 1 ? "" : "s"
+          } ` + `detected (expected ${expected} for Class I).`;
+
+        // Strut table
+        let strutHtml =
+          "<table><thead><tr><th>Strut</th><th>Length (" +
+          result.unit +
+          ")</th><th>Quantity</th><th>Chord ratio</th></tr></thead><tbody>";
+        result.strutGroups.forEach((group) => {
+          strutHtml += `<tr>
+          <td><div class="strut-badge"><strong>${
+            group.label
+          }</strong><div class="strut-color" style="background:${
+            group.color
+          }"></div></div></td>
+          <td><code>${group.mean.toFixed(prec)}</code></td>
+          <td>${group.count}</td>
+          <td style="color:#9fb0c8">approx ${(
+            group.mean / result.radius
+          ).toFixed(6)} x R</td>
+        </tr>`;
+        });
+        strutHtml += "</tbody></table>";
+        document.getElementById("strutTable").innerHTML = strutHtml;
+
+        // Panel table
+        let panelHtml =
+          "<table><thead><tr><th>Panel</th><th>Composition</th><th>Panels</th><th>Edge lengths (" +
+          result.unit +
+          ")</th></tr></thead><tbody>";
+        result.panelGroups.forEach((panel) => {
+          const edges = panel.avgs
+            .map((v) => `<code>${v.toFixed(prec)}</code>`)
+            .join(" ");
+          panelHtml += `<tr>
+          <td><strong>${panel.label}</strong></td>
+          <td>${panel.composition}</td>
+          <td>${panel.count}</td>
+          <td>${edges}</td>
+        </tr>`;
+        });
+        panelHtml += "</tbody></table>";
+        document.getElementById("panelTable").innerHTML = panelHtml;
+
+        // Legend
+        let legendHtml = "";
+        result.strutGroups.forEach((group) => {
+          legendHtml += `<div class="legend-item">
+          <div class="strut-color" style="background:${group.color}"></div>
+          <span>${group.label} (${group.count})</span>
+        </div>`;
+        });
+        document.getElementById("legend").innerHTML = legendHtml;
+      }
+
+      function projectPoint(point, width, height, view) {
+        let rotated = rotateX(point, view.rotationX);
+        rotated = rotateY(rotated, view.rotationY);
+        const scale = Math.min(width, height) * 0.05 * view.zoom;
+        const x = width / 2 + rotated[0] * scale + view.panX;
+        const y = height / 2 - rotated[1] * scale + view.panY;
+        return { x, y, z: rotated[2] };
+      }
+
+      function render() {
+        if (!state.activeCanvas || !state.activeCtx || !state.visData) return;
+
+        const canvas = state.activeCanvas;
+        const ctx = state.activeCtx;
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const width = rect.width;
+        const height = rect.height;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const projected = state.visData.vertices.map((vertex) =>
+          projectPoint(vertex, width, height, state.viewState)
+        );
+
+        const strutGroups = state.result?.strutGroups ?? [];
+        const edges = state.visData.edges
+          .map((edge) => {
+            const [a, b] = edge.split("-").map(Number);
+            const p1 = projected[a];
+            const p2 = projected[b];
+            const avgZ = (p1.z + p2.z) / 2;
+            return { edge, p1, p2, avgZ };
+          })
+          .sort((a, b) => a.avgZ - b.avgZ);
+
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+
+        for (const item of edges) {
+          const groupLabel = state.visData.edgeStrutMap.get(item.edge);
+          const colorIndex = strutGroups.findIndex(
+            (g) => g.label === groupLabel
+          );
+          const strokeStyle =
+            colorIndex >= 0 ? strutGroups[colorIndex].color : "#666666";
+          ctx.strokeStyle = strokeStyle;
+          ctx.beginPath();
+          ctx.moveTo(item.p1.x, item.p1.y);
+          ctx.lineTo(item.p2.x, item.p2.y);
+          ctx.stroke();
+        }
+
+        if (state.showVertices) {
+          ctx.fillStyle = "rgba(238, 242, 255, 0.8)";
+          projected.forEach((p) => {
+            if (Number.isFinite(p.x) && Number.isFinite(p.y)) {
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+        }
+      }
+
+      function setupCanvas(canvas) {
+        state.activeCanvas = canvas;
+        state.activeCtx = canvas.getContext("2d");
+
+        canvas.addEventListener("mousedown", (e) => {
+          const rect = canvas.getBoundingClientRect();
+          state.lastPointer = {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          };
+          state.isDragging = true;
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+          if (!state.isDragging) return;
+          const rect = canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const dx = x - state.lastPointer.x;
+          const dy = y - state.lastPointer.y;
+          state.viewState.rotationY += dx * 0.01;
+          state.viewState.rotationX += dy * 0.01;
+          state.lastPointer = { x, y };
+          render();
+        });
+
+        canvas.addEventListener("wheel", (e) => {
+          e.preventDefault();
+          const factor = e.deltaY > 0 ? 0.9 : 1.1;
+          state.viewState.zoom = Math.max(
+            0.02,
+            Math.min(12, state.viewState.zoom * factor)
+          );
+          render();
+        });
+
+        canvas.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          if (e.touches.length !== 1) return;
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          state.lastPointer = {
+            x: touch.clientX - rect.left,
+            y: touch.clientY - rect.top,
+          };
+          state.isDragging = true;
+        });
+
+        canvas.addEventListener("touchmove", (e) => {
+          e.preventDefault();
+          if (!state.isDragging || e.touches.length !== 1) return;
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+          const dx = x - state.lastPointer.x;
+          const dy = y - state.lastPointer.y;
+          state.viewState.rotationY += dx * 0.01;
+          state.viewState.rotationX += dy * 0.01;
+          state.lastPointer = { x, y };
+          render();
+        });
+
+        render();
+      }
+
+      function downloadCsv(filename, rows) {
+        const csv = rows.map((row) => row.join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // Event listeners
+      document.getElementById("diameter").addEventListener("input", (e) => {
+        state.diameter = parseFloat(e.target.value);
+        compute();
+      });
+
+      document.getElementById("unit").addEventListener("change", (e) => {
+        state.unit = e.target.value;
+        document.getElementById("toleranceUnit").textContent = e.target.value;
+        compute();
+      });
+
+      document.getElementById("tolerance").addEventListener("input", (e) => {
+        state.tolerance = parseFloat(e.target.value);
+        compute();
+      });
+
+      document.getElementById("frequency").addEventListener("input", (e) => {
+        state.frequency = parseFloat(e.target.value);
+        compute();
+      });
+
+      document.getElementById("cut").addEventListener("change", (e) => {
+        state.cut = e.target.value;
+        compute();
+      });
+
+      document
+        .getElementById("showVertices")
+        .addEventListener("change", (e) => {
+          state.showVertices = e.target.checked;
+          document.getElementById("showVerticesFs").checked = e.target.checked;
+          render();
+        });
+
+      document
+        .getElementById("showVerticesFs")
+        .addEventListener("change", (e) => {
+          state.showVertices = e.target.checked;
+          document.getElementById("showVertices").checked = e.target.checked;
+          render();
+        });
+
+      document.getElementById("resetView").addEventListener("click", () => {
+        state.viewState = {
+          rotationX: -0.3,
+          rotationY: 0.2,
+          zoom: 0.8,
+          panX: 0,
+          panY: 0,
+        };
+        render();
+      });
+
+      document.getElementById("topView").addEventListener("click", () => {
+        state.viewState.rotationX = -Math.PI / 2;
+        state.viewState.rotationY = 0;
+        render();
+      });
+
+      document.getElementById("sideView").addEventListener("click", () => {
+        state.viewState.rotationX = 0;
+        state.viewState.rotationY = 0;
+        render();
+      });
+
+      document.getElementById("resetViewFs").addEventListener("click", () => {
+        state.viewState = {
+          rotationX: -0.3,
+          rotationY: 0.2,
+          zoom: 0.8,
+          panX: 0,
+          panY: 0,
+        };
+        render();
+      });
+
+      document.getElementById("topViewFs").addEventListener("click", () => {
+        state.viewState.rotationX = -Math.PI / 2;
+        state.viewState.rotationY = 0;
+        render();
+      });
+
+      document.getElementById("sideViewFs").addEventListener("click", () => {
+        state.viewState.rotationX = 0;
+        state.viewState.rotationY = 0;
+        render();
+      });
+
+      document
+        .getElementById("downloadStruts")
+        .addEventListener("click", () => {
+          if (!state.result) return;
+          const prec = precisionForUnit(state.result.unit);
+          const header = [
+            "Strut Type",
+            `Length (${state.result.unit})`,
+            "Quantity",
+          ];
+          const rows = state.result.strutGroups.map((group) => [
+            group.label,
+            group.mean.toFixed(prec),
+            group.count,
+          ]);
+          downloadCsv(
+            `geodesic_${state.result.frequency}V_struts_${state.diameter}${state.result.unit}.csv`,
+            [header, ...rows]
+          );
+        });
+
+      document
+        .getElementById("downloadPanels")
+        .addEventListener("click", () => {
+          if (!state.result) return;
+          const prec = precisionForUnit(state.result.unit);
+          const header = [
+            "Panel",
+            "Panels",
+            "Composition",
+            `Edge1 (${state.result.unit})`,
+            `Edge2 (${state.result.unit})`,
+            `Edge3 (${state.result.unit})`,
+          ];
+          const rows = state.result.panelGroups.map((panel) => [
+            panel.label,
+            String(panel.count),
+            panel.composition,
+            ...panel.avgs.map((value) => value.toFixed(prec)),
+          ]);
+          downloadCsv(
+            `geodesic_${state.result.frequency}V_panels_${state.diameter}${state.result.unit}.csv`,
+            [header, ...rows]
+          );
+        });
+
+      document
+        .getElementById("openFullscreen")
+        .addEventListener("click", () => {
+          document.getElementById("fullscreenModal").classList.add("active");
+          setTimeout(() => {
+            setupCanvas(document.getElementById("fullscreenCanvas"));
+          }, 100);
+        });
+
+      document
+        .getElementById("closeFullscreen")
+        .addEventListener("click", () => {
+          document.getElementById("fullscreenModal").classList.remove("active");
+          setupCanvas(document.getElementById("canvas"));
+        });
+
+      window.addEventListener("mouseup", () => {
+        state.isDragging = false;
+      });
+
+      window.addEventListener("touchend", () => {
+        state.isDragging = false;
+      });
+
+      window.addEventListener("resize", () => {
+        render();
+      });
+
+      // Initialize
+      setupCanvas(document.getElementById("canvas"));
+      compute();
+    </script>
   </body>
 </html>
